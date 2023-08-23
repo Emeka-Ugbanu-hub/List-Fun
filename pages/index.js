@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 import listIcon from "../public/icons/list.svg";
 import infoIcon from "../public/icons/info.svg";
 import historyIcon from "../public/icons/history.svg";
@@ -88,9 +89,9 @@ export default function Home() {
 
     setRemainingGuesses(remainingGuesses - 1);
     const gameState = {
-      remainingGuesses:remainingGuesses,
-      curGuess:curGuess,
-      feedbackMessage:feedbackMessage,
+      remainingGuesses: remainingGuesses,
+      curGuess: curGuess,
+      feedbackMessage: feedbackMessage,
       // Add other state variables you want to store here
     };
 
@@ -109,17 +110,20 @@ export default function Home() {
 
   const [imageUrlsFetched, setImageUrlsFetched] = useState(false);
   useEffect(() => {
-    if (!imageUrlsFetched) {
-      listAll(imageListRef)
-        .then((response) => Promise.all(response.items.map(getDownloadURL)))
-        .then((urls) => {
-          setImageList(urls);
-          setImageUrlsFetched(true); // Mark image URLs as fetched
-        })
-        .catch((error) => {
-          console.error("Error fetching image URLs:", error);
-        });
+    function fetchImage() {
+      if (!imageUrlsFetched) {
+        listAll(imageListRef)
+          .then((response) => Promise.all(response.items.map(getDownloadURL)))
+          .then((urls) => {
+            setImageList(urls);
+            setImageUrlsFetched(true); // Mark image URLs as fetched
+          })
+          .catch((error) => {
+            console.error("Error fetching image URLs:", error);
+          });
+      }
     }
+    fetchImage();
   }, [imageUrlsFetched]);
 
   useEffect(() => {
@@ -168,9 +172,9 @@ export default function Home() {
 
       <header className="flex items-center justify-between w-full ">
         <nav className="flex space-x-4">
-          <a href="/" className="text-gray-600 hover:text-gray-800">
+          <Link href="/" className="text-gray-600 hover:text-gray-800">
             <Image priority src={listIcon} alt="list" height={32} width={32} />
-          </a>
+          </Link>
           <div className="text-gray-600 hover:text-gray-800" onClick={openInfo}>
             <Image priority src={infoIcon} alt="info" height={32} width={32} />
           </div>
@@ -198,7 +202,13 @@ export default function Home() {
       <Carousel autoPlay={true} showThumbs={false}>
         {imageList.map((imageUrl, index) => (
           <div key={index} className="h-72">
-            <img src={imageUrl} alt={`Image ${index}`} />
+            <Image
+              loader={() => imageUrl}
+              src={imageUrl}
+              width={50}
+              height={50}
+              alt={`Image ${index}`}
+            />
           </div>
         ))}
       </Carousel>
@@ -403,12 +413,12 @@ export default function Home() {
       </Modal>
       <Modal isOpen={helpOpen} onClose={closeHelp} buttonText="PLAY">
         <div>
-          🏡 WELCOME TO LISTED 🏡 In this game, your goal is to guess the sale
+          {` 🏡 WELCOME TO LISTED 🏡 In this game, your goal is to guess the sale
           price of a recently sold property After each guess, you learn more
           about the property, and get feedback about your guess: ⬆️ Guess much
           higher next time ↗️ Guess a little higher next time 🏡 You win! ↘️
           Guess a little lower next time ⬇️ Guess much lower next time ↗️ or ↘️?
-          You're within 10%! Get within 1% to win
+          You're within 10%! Get within 1% to win`}
         </div>
       </Modal>
       <Modal isOpen={historyOpen} onClose={closeHistory} buttonText="DONE">
