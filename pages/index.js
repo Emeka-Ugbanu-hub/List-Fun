@@ -537,7 +537,7 @@ export default function Home() {
           <div>↗️ Guess a little higher next time</div>
           <div>🏡 You win!</div> <div>↘️ Guess a little lower next time</div>
           <div>⬇️ Guess much lower next time</div>
-          <div>↗️ or ↘️? You're within 10%! or $10,000!</div>
+          <div>↗️ or ↘️? You are within 10%! or $10,000!</div>
           <div>Get within 1% or $5,000 to win</div>
         </div>
       </Modal>
