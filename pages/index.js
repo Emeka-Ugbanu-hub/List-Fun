@@ -171,10 +171,14 @@ export default function Home() {
     // Apply dark mode styles when darkMode state changes
     if (darkMode) {
       // Apply dark mode styles
-      document.documentElement.classList.add("dark");
+      document.documentElement.style.background = "#fff";
+      document.documentElement.style.backgroundImage = "linear-gradient(#000, #000)";
+      document.documentElement.style.color = "#fff";
     } else {
       // Remove dark mode styles
-      document.documentElement.classList.remove("dark");
+      document.documentElement.style.background = "#000";
+      document.documentElement.style.backgroundImage = "linear-gradient(#fff, #fff)";
+      document.documentElement.style.color = "#000";
     }
   }, [darkMode]);
   const toggleDarkMode = (mode) => {
