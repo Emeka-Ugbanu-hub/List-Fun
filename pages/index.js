@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
-import Link from "next/link";
-
-import helpIcon from "../public/icons/help.svg";
 import Modal from "./component/modal";
 import DarkModeToggle from "./component/DarkModeToggle";
-import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from "react-responsive-carousel";
 import { db, storage } from "../firebase/initFireBase";
 import { ref, listAll, getDownloadURL } from "firebase/storage";
 import { getDoc, doc } from "firebase/firestore";
+import { getURL } from "next/dist/shared/lib/utils";
 
 export default function Home() {
   const [infoOpen, setInfoOpen] = useState(false);
@@ -21,8 +19,9 @@ export default function Home() {
   const [remainingGuesses, setRemainingGuesses] = useState(9);
   const [curGuess, setCurGuess] = useState("");
   const [invalidInput, setInvalidInput] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [imageList, setImageList] = useState([]);
+  const [winner, setWinner] = useState(false);
   const imageListRef = ref(storage, "images/");
   const [listOneData, setListOneData] = useState({
     actualPrice: 800,
@@ -65,10 +64,11 @@ export default function Home() {
     }
 
     setCurGuess(userGuess);
-    const guess = parseInt(curGuess);
+    const guess = parseInt(userGuess);
 
     if (guess === listOneData.actualPrice) {
       setFeedbackMessage("🏡 You win!");
+      setWinner(true);
     } else {
       const difference = Math.abs(guess - listOneData.actualPrice);
       const percentDifference = (difference / listOneData.actualPrice) * 100;
@@ -87,15 +87,6 @@ export default function Home() {
     }
 
     setRemainingGuesses(remainingGuesses - 1);
-    const gameState = {
-      remainingGuesses: remainingGuesses - 1,
-      curGuess: curGuess,
-      feedbackMessage: feedbackMessage,
-      // Add other state variables you want to store here
-    };
-
-    // Convert the gameState object to a JSON string and save it to local storage
-    localStorage.setItem("gameState", JSON.stringify(gameState));
   };
 
   const handleInputChange = (e) => {
@@ -157,9 +148,25 @@ export default function Home() {
       setRemainingGuesses(parsedGameState.remainingGuesses);
       setCurGuess(parsedGameState.curGuess);
       setFeedbackMessage(parsedGameState.feedbackMessage);
+      setWinner(parsedGameState.winner);
       // Update other state variables as needed
     }
   }, []);
+
+  useEffect(() => {
+    // Save the current user guess to local storage whenever curGuess changes
+    const gameState = {
+      remainingGuesses: remainingGuesses,
+      curGuess: curGuess,
+      feedbackMessage: feedbackMessage,
+      winner: winner,
+      // Add other state variables you want to store here
+    };
+
+    // Convert the gameState object to a JSON string and save it to local storage
+    localStorage.setItem("gameState", JSON.stringify(gameState));
+  }, [curGuess, feedbackMessage, remainingGuesses, winner]);
+
   useEffect(() => {
     // Apply dark mode styles when darkMode state changes
     if (darkMode) {
@@ -182,7 +189,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <header className="flex items-center justify-between w-full ">
+      <header className="flex items-center justify-between  w-10/12 lg:w-full  ">
         <nav className="flex space-x-4">
           <div
             className="text-gray-600 cursor-pointer hover:text-gray-800"
@@ -255,7 +262,10 @@ export default function Home() {
 
       <Carousel autoPlay={false} showThumbs={false}>
         {imageList.map((imageUrl, index) => (
-          <div key={index} className="h-72">
+          <div
+            key={index}
+            className="h-72  w-10/12 mt-4 ml-8 lg:ml-0 lg:w-full bg-white"
+          >
             <Image
               loader={() => imageUrl}
               src={imageUrl}
@@ -267,7 +277,7 @@ export default function Home() {
         ))}
       </Carousel>
 
-      <div className="w-full flex  mt-4">
+      <div className=" w-10/12 ml-8 lg:ml-0 lg:w-full flex  mt-4">
         <div className="flex-1 space-y-4">
           <div>
             <h1
@@ -442,8 +452,8 @@ export default function Home() {
       </div>
 
       <div
-        style={{ display: remainingGuesses <= 0 ? "none" : "flex" }} // Flex display when guesses are remaining
-        className="mt-2 text-center mt-6 w-full flex space-x-4"
+        style={{ display: winner ? "none" : "flex" }} // Flex display when guesses are remaining
+        className="mt-2 text-center mt-6 w-10/12 lg:w-full  flex space-x-4"
       >
         <div className="flex-none">
           {remainingGuesses < 9 && `Guess ${remainingGuesses}`}
@@ -458,8 +468,8 @@ export default function Home() {
       </div>
 
       <div
-        style={{ display: remainingGuesses <= 0 ? "none" : "flex" }}
-        className=" w-full space-x-2 "
+        style={{ display: winner ? "none" : "flex" }}
+        className=" w-10/12 lg:w-full space-x-2 "
       >
         <input
           type="text"
@@ -467,7 +477,7 @@ export default function Home() {
           onChange={handleInputChange}
           className={`border border-gray-300 w-3/4 text-black px-4 py-2 rounded-l-lg ${
             invalidInput ? "border-red-500" : ""
-          } `}
+          }   bg-white text-black`}
           title={invalidInput ? "Please enter a valid number" : ""}
         />
         <button
@@ -481,7 +491,7 @@ export default function Home() {
       </div>
 
       <div
-        style={{ display: remainingGuesses <= 0 ? "block" : "none" }}
+        style={{ display: winner ? "block" : "none" }}
         class="block w-10/12 rounded-lg bg-white p-6 border border-amber-300 "
       >
         <div class="mb-2 text-xl font-medium text-center leading-tight text-neutral-800 dark:text-neutral-50">
@@ -489,7 +499,7 @@ export default function Home() {
         </div>
 
         <p class="mb-4 text-base text-center text-neutral-600 ">
-          Too bad - try again tommorrow
+          {winner ? "Winner" : " Too bad - try again tommorrow"}
         </p>
         <div className="flex justify-center mt-4">
           <button
@@ -546,8 +556,6 @@ export default function Home() {
           className={` text-center ${darkMode ? "text-black" : "text-black"}`}
         >
           <div>🏡 LISTED STATS 🏡</div>
-          
-         
         </div>
       </Modal>
     </div>
